@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<gadget>
+	<name>Xbox Friends</name>
+	<namespace>realmtech.net</namespace>
+	<version>1.0</version>
+	<author name="realmtech.net">
+		<info url="http://www.realmtech.net" />
+		<logo src="icon.png" />
+	</author>
+	<copyright>© 2015 Intermatrix</copyright>
+	<description>Show your online Xbox friends..</description>
+	<icons>
+		<icon height="100" width="100" src="icon.png" />
+	</icons>
+	<hosts>
+		<host name="sidebar">
+			<base type="HTML" apiVersion="1.0.0.0" src="gadget.html" />
+			<permissions>Full</permissions>
+			<platform minPlatformVersion="1.0"/>
+			<defaultImage src="icon.png" />
+		</host>
+	</hosts>
+</gadget>
