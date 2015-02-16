@@ -55,19 +55,23 @@ function fetchFriends() {
             gamerTag1.innerText = "API Rate Limit Exceeded";
             gamerTag1.style.color = '#E11841';
             apiError = true;
+            
+            // API Rate Limit exceeded; retry in 5 mins.
             clearInterval(timer);
-            timer = setInterval("onTimer()", 300000);
+            timer = setInterval("onTimer()", (5*60000));
         } else if (xhr.readyState==4 && xhr.status==200) {
             gadgetTitle.innerText = "Friends Online";
             apiError = false;
+            
             eval('var freshFriends = ' + xhr.responseText);
             if (freshFriends.length != friends.length) {
                 friends.length = 0;
                 eval('friends = ' + xhr.responseText);
-
+                
+                // Set refresh timer so we don't exceed our API Rate Limit.
                 if (friends.length > 0)
-                    var delay = friends.length / (callsPerHour / 3600000);
-                else
+                    var delay = (friends.length + 1) / (callsPerHour / (60*60000));
+                else // In case we didn't get any friends for some reason.
                     var delay = 60000;
                 clearInterval(timer);
                 timer = setInterval("onTimer()", delay);
@@ -82,6 +86,10 @@ function fetchFriends() {
     }
     xhr.send();
     totalUsage++;
+    
+    // Set 1 minute timer to retry, in case of failure.
+    clearInterval(timer);
+    timer = setInterval("onTimer()", 60000);
 }
 
 
