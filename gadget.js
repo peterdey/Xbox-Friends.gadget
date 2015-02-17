@@ -172,5 +172,12 @@ function refreshDisplay() {
     
 
 function loadSettings() {
+    var oFSO = new ActiveXObject("Scripting.FileSystemObject");
     apiKey = System.Gadget.Settings.read("APIKey");
+    
+    if (apiKey == "" && oFSO.FileExists(System.Gadget.path+"\\apikey.txt")) {
+        var apiKeyFileFile = oFSO.OpenTextFile(System.Gadget.path+"\\apikey.txt", 1);
+        apiKey = apiKeyFileFile.ReadLine();
+        apiKeyFileFile.Close();
+    }
 }
