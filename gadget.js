@@ -15,7 +15,6 @@ var Xuid;
 var callsPerHour = 120;
 var apiError = false;
 var totalUsage = 0;
-var timer;
 var timeout;
 
 var friends = new Array();
@@ -87,15 +86,15 @@ function fetchFriends() {
     xhr.onreadystatechange = function () {
         gadgetTitle.innerText = "Refreshing" + Array(xhr.readyState+1).join(".");
         if (xhr.readyState==4 && xhr.status==403) {
-            gadgetTitle.innerText = "API Rate Limit Exceeded";
+            gadgetTitle.innerText = "Refresh Error";
             gamerTag1.innerText = "API Rate Limit Exceeded";
             gamerTag1.style.color = '#E11841';
             apiError = true;
+            friends.length = 0;
             
             // API Rate Limit exceeded; retry in 5 mins.
-            clearInterval(timer);
             clearTimeout(timeout);
-            timeout = setTimeout("onTimer()", (5*60000));
+            timeout = setTimeout("onTimer()", xhr.getResponseHeader('X-RateLimit-Reset')*1000);
         } else if (xhr.readyState==4 && xhr.status==200) {
             clearTimeout(timeout);
             gadgetTitle.innerText = "Friends Online";
@@ -103,18 +102,30 @@ function fetchFriends() {
             
             eval('var freshFriends = ' + xhr.responseText);
             if (freshFriends.length != friends.length) {
-                // Number of friends has changed.  Update friends array, and reset the refresh timer.
+                // Number of friends has changed.  Update friends array.
                 friends.length = 0;
                 eval('friends = ' + xhr.responseText);
-                
-                // Set refresh timer so we don't exceed our API Rate Limit.
-                if (friends.length > 0)
-                    var delay = (friends.length + 1) / (callsPerHour / (60*60000));
-                else // In case we didn't get any friends for some reason.
-                    var delay = 60000;
-                clearInterval(timer);
-                timer = setInterval("onTimer()", delay);
             }
+            
+            // Default delay, in case we didn't get any friends for some reason.
+            var delay = 60000;
+            
+            // Set refresh timer so we don't exceed our API Rate Limit.
+            if (friends.length > 0) {
+                var callsLeft = xhr.getResponseHeader('X-RateLimit-Remaining');
+                var secsLeft = xhr.getResponseHeader('X-RateLimit-Reset');
+                
+                if (callsLeft == 0)
+                    delay = secsLeft*1000;
+                else
+                    delay = 1000*(friends.length + 1)/(callsLeft/secsLeft);
+                
+                if (delay > secsLeft*1000)
+                    delay = secsLeft*1000;
+            }
+            clearTimeout(timeout);
+            timeout = setTimeout("onTimer()", delay);
+            usgTotal.innerText = xhr.getResponseHeader('X-RateLimit-Remaining');
             refreshDisplay();
             fetchPresence();
         } else if (xhr.readyState == 4) {
@@ -157,8 +168,6 @@ function fetchPresence() {
 
 function refreshDisplay() {
     var label;
-    
-    usgTotal.innerText = totalUsage;
     
     var numOnline = 0;
     for (i = 0; i < friends.length; i++) {
