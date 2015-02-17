@@ -11,6 +11,7 @@ System.Gadget.settingsUI = "settings.html";
 System.Gadget.onSettingsClosed = onSettingsClosed;
 
 var apiKey;
+var Xuid;
 var callsPerHour = 120;
 var apiError = false;
 var totalUsage = 0;
@@ -38,15 +39,49 @@ function onTimer() {
     refreshDisplay();
 }
 
+function fetchXuid() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('get', 'https://xboxapi.com/v2/accountXuid', true);
+    xhr.responseType = 'text';
+    xhr.setRequestHeader("X-AUTH", apiKey);
+    xhr.onreadystatechange = function () {
+        gadgetTitle.innerText = "Fetching Xuid" + Array(xhr.readyState+1).join(".");
+        if (xhr.readyState==4 && xhr.status==403) {
+            gadgetTitle.innerText = "API Rate Limit Exceeded";
+            gamerTag1.innerText = "API Rate Limit Exceeded";
+            gamerTag1.style.color = '#E11841';
+            apiError = true;
+        } else if (xhr.readyState==4 && xhr.status==200) {
+            apiError = false;
+            
+            eval('var XuidResponse = ' + xhr.responseText);
+            if (XuidResponse.xuid != null) {
+                Xuid = XuidResponse.xuid;
+                onTimer();
+            }
+        } else if (xhr.readyState == 4) {
+            gamerTag1.innerText = "Error " + xhr.status;
+            gamerTag1.style.color = '#E11841';
+            gamerTag2.innerText = xhr.responseBody;
+        }
+    }
+    xhr.send();
+    totalUsage++;
+}
+
 function fetchFriends() {
-    if (apiKey == '') {
+    if (apiKey == null || apiKey == '') {
         gamerTag1.innerText = "API Key not set.";
         gamerTag1.style.color = '#E11841';
         apiError = true;
         return;
     }
+    if (Xuid == null || Xuid == '') {
+        fetchXuid();
+        return;
+    }
     var xhr = new XMLHttpRequest();
-    xhr.open('get', 'https://xboxapi.com/v2/2535415988011128/friends', true);
+    xhr.open('get', 'https://xboxapi.com/v2/' + Xuid + '/friends', true);
     xhr.responseType = 'text';
     xhr.setRequestHeader("X-AUTH", apiKey);
     xhr.onreadystatechange = function () {
