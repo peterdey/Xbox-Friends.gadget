@@ -13,6 +13,7 @@ System.Gadget.onSettingsClosed = onSettingsClosed;
 var apiKey;
 var Xuid;
 var callsPerHour = 120;
+var maxGamers = 8;
 var apiError = false;
 var totalUsage = 0;
 var timeout;
@@ -173,7 +174,7 @@ function refreshDisplay() {
     for (i = 0; i < friends.length; i++) {
         if (friends[i].presence != null && friends[i].presence.state != 'Offline') {
             numOnline++;
-            if (numOnline <= 5) {
+            if (numOnline <= maxGamers) {
                 label = document.getElementById("gamerTag" + numOnline);
                 game = document.getElementById("gameTitle" + numOnline);
 
@@ -197,8 +198,8 @@ function refreshDisplay() {
             }
         }
     }
-    if (numOnline < 5 && friends.length > 0) {
-        for (i = numOnline+1; i <= 5; i++) {
+    if (numOnline < maxGamers && friends.length > 0) {
+        for (i = numOnline+1; i <= maxGamers; i++) {
             label = document.getElementById("gamerTag" + i);
             game = document.getElementById("gameTitle" + i);
             ping = document.getElementById("bar" + i);
